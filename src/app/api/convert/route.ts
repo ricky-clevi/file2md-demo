@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         await mkdir(outputDir, { recursive: true });
       }
     } catch (error) {
-      console.error('Failed to create directories:', error);
+      // Failed to create directories
       throw error;
     }
 
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       // Convert file using file2md with enhanced options
       const imageDir = path.join(tempDir, `${fileId}-images`);
       
-      console.log(`🔧 Setting imageDir to: ${imageDir}`);
+      // Setting imageDir
       
       const result = await convert(tempFilePath, {
         imageDir: imageDir,    // For legacy mode (DOCX, etc.)
@@ -106,11 +106,7 @@ export async function POST(request: NextRequest) {
         extractCharts: extractChartsFlag,
       });
       
-      console.log(`📊 Conversion result: ${result.images.length} images extracted`);
-      for (let i = 0; i < result.images.length; i++) {
-        const img = result.images[i];
-        console.log(`  Image ${i + 1}: ${img.savedPath}`);
-      }
+      // Conversion completed with images
     
 
       const hasImages = result.images.length > 0;
@@ -151,7 +147,7 @@ export async function POST(request: NextRequest) {
           }
           
         } catch (mirrorErr) {
-          console.warn('Failed to build public preview images mirror:', mirrorErr);
+          // Failed to build public preview images mirror
         }
 
         await createZipFile(zipPath, result.markdown, originalName, [...result.images], tempFilePath, imageDir);
@@ -231,7 +227,7 @@ export async function POST(request: NextRequest) {
       });
 
     } catch (conversionError) {
-      console.error('Conversion error:', conversionError);
+      // Conversion error occurred
       
       // Clean up temporary files on error
       let imageDir: string | undefined;
@@ -239,7 +235,7 @@ export async function POST(request: NextRequest) {
         imageDir = path.join(tempDir, `${fileId}-images`);
         await cleanupTempFiles(tempFilePath, imageDir);
       } catch (cleanupError) {
-        console.warn('Cleanup error:', cleanupError);
+        // Cleanup error occurred
       }
       
       const message = conversionError instanceof Error ? conversionError.message : 'Unknown error';
@@ -250,7 +246,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('API error:', error);
+    // API error occurred
     const message = error instanceof Error ? error.message : 'Unknown error';
     return new Response(JSON.stringify({ error: `Server error: ${message}` }), {
       status: 500,
@@ -274,14 +270,14 @@ async function createZipFile(
     output.on('close', () => {
       // Clean up temporary files AFTER ZIP is complete
       cleanupTempFiles(tempFilePath, imageDir)
-        .catch(err => console.warn('Cleanup error:', err));
+        .catch(() => {});
       resolve();
     });
     
     archive.on('error', (err) => {
       // Clean up on error too, but don't throw from cleanup
       cleanupTempFiles(tempFilePath, imageDir)
-        .catch(cleanupErr => console.warn('Cleanup error:', cleanupErr));
+        .catch(() => {});
       reject(err);
     });
 
@@ -300,11 +296,7 @@ async function createZipFile(
         const normalizedImagePath = path.normalize(absImagePath);
         const normalizedImageDir = path.normalize(absImageDir);
         
-        console.log(`🔍 Path check for image: ${path.basename(absImagePath)}`);
-        console.log(`  Image path: ${normalizedImagePath}`);
-        console.log(`  Expected dir: ${normalizedImageDir}`);
-        console.log(`  Starts with expected: ${normalizedImagePath.startsWith(normalizedImageDir + path.sep)}`);
-        console.log(`  Equals expected: ${normalizedImagePath === normalizedImageDir}`);
+        // Path validation for image
         
         // Temporarily disable path check to debug
         const pathCheckPasses = normalizedImagePath.startsWith(normalizedImageDir + path.sep) || 
@@ -312,9 +304,7 @@ async function createZipFile(
                                normalizedImagePath.startsWith(normalizedImageDir); // More lenient check
         
         if (!pathCheckPasses) {
-          console.warn(`⚠️ Image path check failed, but including anyway for debugging:`);
-          console.warn(`  Image path: ${normalizedImagePath}`);
-          console.warn(`  Expected dir: ${normalizedImageDir}`);
+          // Image path check failed but continuing
           // Don't continue - let it through for debugging
         }
 
@@ -323,12 +313,12 @@ async function createZipFile(
         // Using existsSync creates race conditions with Sharp buffer writes
         try {
           archive.file(absImagePath, { name: `images/${imageName}` });
-          console.log(`✅ Added image to ZIP: ${imageName}`);
+          // Added image to ZIP
         } catch (fileError: unknown) {
-          console.warn(`❌ Failed to add image to ZIP: ${imageName}`, fileError);
+          // Failed to add image to ZIP
         }
       } catch (e) {
-        console.warn(`Error processing image for ZIP:`, e);
+        // Error processing image for ZIP
       }
     }
 
@@ -350,7 +340,7 @@ async function cleanupTempFiles(tempFilePath: string, imageDir: string): Promise
     }
     
   } catch (error) {
-    console.warn('Cleanup error:', error);
+    // Cleanup error occurred
     // Don't throw - cleanup errors shouldn't break the main flow
   }
 }

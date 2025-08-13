@@ -31,7 +31,7 @@ export async function POST() {
     });
 
   } catch (error) {
-    console.error('Cleanup error:', error);
+    // Cleanup error occurred
     return NextResponse.json(
       { 
         success: false, 
@@ -64,13 +64,13 @@ async function cleanDirectory(dirPath: string): Promise<number> {
             await rm(filePath, { recursive: true, force: true });
             cleaned++;
           } catch (eRm) {
-            console.warn(`Failed to remove ${filePath}:`, eRm);
+            // Failed to remove file
           }
         }
       }
     }
   } catch (error) {
-    console.warn(`Error cleaning directory ${dirPath}:`, error);
+    // Error cleaning directory
   }
 
   return cleaned;
