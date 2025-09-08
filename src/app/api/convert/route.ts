@@ -175,54 +175,89 @@ export async function POST(request: NextRequest) {
           
           downloadUrl = `data:application/zip;base64,${base64Zip}`;
           
-          // Create dynamic image URLs using our serve-image API
+          // Create base64 data URLs for image preview (reliable serverless approach)
           previewMarkdown = result.markdown;
+          const imageDataUrls: Record<string, string> = {};
           
-          console.log('Processing images for serverless preview:', {
+          console.log('Creating base64 image previews:', {
             imageCount: result.images.length,
-            imageDir,
-            sessionId: fileId
+            imageDir
           });
           
           for (const image of result.images) {
             const savedPath = typeof image.savedPath === 'string' ? image.savedPath : '';
             if (!savedPath) continue;
             
-            const imageName = path.basename(savedPath);
-            console.log('Processing image:', {
-              savedPath,
-              imageName,
-              fileExists: existsSync(savedPath)
-            });
-            
-            // Create dynamic image URL using our serve-image API
-            const imageUrl = `/api/serve-image?path=${encodeURIComponent(imageName)}&session=${fileId}`;
-            
-            // Replace image references with dynamic URLs
-            const patterns = [
-              new RegExp(`!\\[([^\\]]*)\\]\\(images/${escapeRegExp(imageName)}\\)`, 'g'),
-              new RegExp(`!\\[([^\\]]*)\\]\\(\\./images/${escapeRegExp(imageName)}\\)`, 'g'),
-              new RegExp(`src="images/${escapeRegExp(imageName)}"`, 'g'),
-              new RegExp(`src="\\./images/${escapeRegExp(imageName)}"`, 'g'),
-            ];
-            
-            let replacements = 0;
-            patterns.forEach(pattern => {
-              const before = previewMarkdown.length;
-              if (pattern.source.includes('!\\[')) {
-                previewMarkdown = previewMarkdown.replace(pattern, `![$1](${imageUrl})`);
-              } else {
-                previewMarkdown = previewMarkdown.replace(pattern, `src="${imageUrl}"`);
+            try {
+              const imageBuffer = await fs.readFile(savedPath);
+              const imageName = path.basename(savedPath);
+              const ext = path.extname(imageName).toLowerCase();
+              
+              console.log('Processing image for base64:', {
+                imageName,
+                savedPath,
+                size: imageBuffer.length,
+                exists: existsSync(savedPath)
+              });
+              
+              // Skip very large images to avoid memory issues (3MB limit)
+              if (imageBuffer.length > 3 * 1024 * 1024) {
+                console.log(`Skipping large image ${imageName}: ${imageBuffer.length} bytes`);
+                continue;
               }
-              if (previewMarkdown.length !== before) {
-                replacements++;
-              }
-            });
-            
-            console.log(`Made ${replacements} replacements for ${imageName} with URL: ${imageUrl}`);
+              
+              // Determine MIME type
+              let mimeType = 'image/png';
+              if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
+              else if (ext === '.gif') mimeType = 'image/gif';
+              else if (ext === '.webp') mimeType = 'image/webp';
+              else if (ext === '.bmp') mimeType = 'image/bmp';
+              
+              const base64Image = imageBuffer.toString('base64');
+              const dataUrl = `data:${mimeType};base64,${base64Image}`;
+              
+              // Map image filename to data URL
+              imageDataUrls[imageName] = dataUrl;
+              console.log(`Created base64 data URL for ${imageName} (${mimeType})`);
+              
+            } catch (err) {
+              console.error(`Failed to process image ${savedPath}:`, err);
+            }
           }
           
-          console.log('Serverless mode: Using dynamic image serving for preview');
+          // Replace image references with base64 data URLs
+          console.log('Replacing image references with base64 data URLs:', Object.keys(imageDataUrls));
+          
+          for (const [imageName, dataUrl] of Object.entries(imageDataUrls)) {
+            const escapedName = escapeRegExp(imageName);
+            
+            // Multiple comprehensive patterns
+            const patterns = [
+              // Standard markdown image syntax
+              { regex: new RegExp(`!\\[([^\\]]*)\\]\\(images/${escapedName}\\)`, 'gi'), replacement: `![$1](${dataUrl})` },
+              { regex: new RegExp(`!\\[([^\\]]*)\\]\\(\\./images/${escapedName}\\)`, 'gi'), replacement: `![$1](${dataUrl})` },
+              // HTML img tags
+              { regex: new RegExp(`<img([^>]*) src="images/${escapedName}"([^>]*)>`, 'gi'), replacement: `<img$1 src="${dataUrl}"$2>` },
+              { regex: new RegExp(`<img([^>]*) src="\\./images/${escapedName}"([^>]*)>`, 'gi'), replacement: `<img$1 src="${dataUrl}"$2>` },
+              // Direct path references
+              { regex: new RegExp(`images/${escapedName}`, 'gi'), replacement: dataUrl },
+              { regex: new RegExp(`\\./images/${escapedName}`, 'gi'), replacement: dataUrl }
+            ];
+            
+            let totalReplacements = 0;
+            patterns.forEach(({ regex, replacement }) => {
+              const matches = previewMarkdown.match(regex);
+              if (matches) {
+                previewMarkdown = previewMarkdown.replace(regex, replacement);
+                totalReplacements += matches.length;
+                console.log(`Replaced ${matches.length} occurrences of ${imageName} using pattern: ${regex.source}`);
+              }
+            });
+            
+            console.log(`Total replacements for ${imageName}: ${totalReplacements}`);
+          }
+          
+          console.log('Serverless mode: Using base64 encoding for reliable image preview');
         } else {
           // Local development path
           await createZipFile(zipPath, result.markdown, originalName, [...result.images], tempFilePath, imageDir);
