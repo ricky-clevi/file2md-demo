@@ -10,6 +10,11 @@ import { convert } from 'file2md';
 
 export const runtime = 'nodejs';
 
+// Helper function to escape special regex characters
+function escapeRegExp(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -162,11 +167,57 @@ export async function POST(request: NextRequest) {
           
           downloadUrl = `data:application/zip;base64,${base64Zip}`;
           
-          // For Vercel, images won't be previewable in markdown, so show placeholder
-          previewMarkdown = result.markdown.replace(
-            /!\[([^\]]*)\]\(([^)]+)\)/g,
-            '![Image preview not available on serverless - download ZIP to view images]'
-          );
+          // Create base64 data URLs for image preview on serverless
+          const imageDataUrls: Record<string, string> = {};
+          
+          for (const image of result.images) {
+            const savedPath = typeof image.savedPath === 'string' ? image.savedPath : '';
+            if (!savedPath) continue;
+            
+            try {
+              const imageBuffer = await fs.readFile(savedPath);
+              const imageName = path.basename(savedPath);
+              const ext = path.extname(imageName).toLowerCase();
+              
+              // Skip very large images for preview (>2MB) to avoid memory issues
+              if (imageBuffer.length > 2 * 1024 * 1024) {
+                continue;
+              }
+              
+              // Determine MIME type
+              let mimeType = 'image/png';
+              if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
+              else if (ext === '.gif') mimeType = 'image/gif';
+              else if (ext === '.webp') mimeType = 'image/webp';
+              
+              const base64Image = imageBuffer.toString('base64');
+              const dataUrl = `data:${mimeType};base64,${base64Image}`;
+              
+              // Map image filename to data URL
+              imageDataUrls[imageName] = dataUrl;
+            } catch (err) {
+              // Skip failed images
+            }
+          }
+          
+          // Replace image references with base64 data URLs
+          previewMarkdown = result.markdown;
+          for (const [imageName, dataUrl] of Object.entries(imageDataUrls)) {
+            const patterns = [
+              new RegExp(`!\\[([^\\]]*)\\]\\(images/${escapeRegExp(imageName)}\\)`, 'g'),
+              new RegExp(`!\\[([^\\]]*)\\]\\(\\./images/${escapeRegExp(imageName)}\\)`, 'g'),
+              new RegExp(`src="images/${escapeRegExp(imageName)}"`, 'g'),
+              new RegExp(`src="\\./images/${escapeRegExp(imageName)}"`, 'g'),
+            ];
+            
+            patterns.forEach(pattern => {
+              if (pattern.source.includes('!\\[')) {
+                previewMarkdown = previewMarkdown.replace(pattern, `![$1](${dataUrl})`);
+              } else {
+                previewMarkdown = previewMarkdown.replace(pattern, `src="${dataUrl}"`);
+              }
+            });
+          }
         } else {
           // Local development path
           await createZipFile(zipPath, result.markdown, originalName, [...result.images], tempFilePath, imageDir);

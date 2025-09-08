@@ -25,9 +25,59 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Minimal prose styling for markdown preview */
-.prose h1, .prose h2, .prose h3 { font-weight: 700; margin-top: 1rem; }
-.prose p { margin: 0.5rem 0; line-height: 1.6; }
-.prose code { background: #f3f4f6; padding: 0.1rem 0.3rem; border-radius: 0.25rem; }
-.prose pre { background: #111827; color: #e5e7eb; padding: 0.75rem; border-radius: 0.5rem; overflow: auto; }
-.prose a { color: #2563eb; text-decoration: underline; }
+/* Enhanced prose styling for markdown preview with better visibility */
+.prose { color: #1f2937; }
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 { 
+  font-weight: 700; 
+  margin-top: 1rem; 
+  color: #111827 !important;
+}
+.prose p { 
+  margin: 0.5rem 0; 
+  line-height: 1.6; 
+  color: #374151 !important;
+}
+.prose li { 
+  color: #374151 !important; 
+}
+.prose strong { 
+  color: #111827 !important; 
+  font-weight: 600;
+}
+.prose blockquote { 
+  color: #4b5563 !important;
+  border-left: 4px solid #d1d5db;
+  padding-left: 1rem;
+  margin: 1rem 0;
+}
+.prose code { 
+  background: #f3f4f6; 
+  padding: 0.1rem 0.3rem; 
+  border-radius: 0.25rem; 
+  color: #dc2626 !important;
+}
+.prose pre { 
+  background: #111827; 
+  color: #e5e7eb; 
+  padding: 0.75rem; 
+  border-radius: 0.5rem; 
+  overflow: auto; 
+}
+.prose a { 
+  color: #2563eb !important; 
+  text-decoration: underline; 
+}
+.prose table { 
+  border-collapse: collapse; 
+  width: 100%; 
+}
+.prose th, .prose td { 
+  border: 1px solid #d1d5db; 
+  padding: 0.5rem; 
+  color: #374151 !important;
+}
+.prose th { 
+  background: #f9fafb; 
+  font-weight: 600;
+  color: #111827 !important;
+}

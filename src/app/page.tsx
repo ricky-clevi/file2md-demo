@@ -297,7 +297,7 @@ export default function Home() {
                       Download {result.hasImages ? 'ZIP' : 'Markdown'}
                     </button>
                   </div>
-                  <div className="prose max-w-none text-left bg-white rounded-md p-4 border max-h-[60vh] overflow-auto">
+                  <div className="prose max-w-none text-left bg-white rounded-md p-4 border max-h-[60vh] overflow-auto prose-gray prose-headings:text-gray-900 prose-p:text-gray-800 prose-strong:text-gray-900 prose-li:text-gray-800 prose-blockquote:text-gray-700">
                     <ErrorBoundary
                       fallback={
                         <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
@@ -327,11 +327,28 @@ export default function Home() {
                            // eslint-disable-next-line @next/next/no-img-element
                            <img
                              src={props.src as string}
-                             style={{ maxWidth: '100%', height: 'auto', marginBottom: '1rem' }}
+                             style={{ 
+                               maxWidth: '100%', 
+                               height: 'auto', 
+                               marginBottom: '1rem',
+                               border: '1px solid #e5e7eb',
+                               borderRadius: '4px',
+                               backgroundColor: '#f9fafb'
+                             }}
+                             onLoad={(e) => {
+                               (e.target as HTMLImageElement).style.backgroundColor = 'transparent';
+                             }}
                              onError={(e) => {
-                               (e.target as HTMLImageElement).style.display = 'none';
+                               const img = e.target as HTMLImageElement;
+                               img.style.display = 'none';
+                               // Add fallback text
+                               const fallback = document.createElement('div');
+                               fallback.textContent = `[Image: ${props.alt || 'Unable to load image'}]`;
+                               fallback.style.cssText = 'color: #6b7280; font-style: italic; padding: 8px; border: 1px dashed #d1d5db; border-radius: 4px; margin-bottom: 1rem;';
+                               img.parentNode?.insertBefore(fallback, img.nextSibling);
                              }}
                              alt={props.alt || 'Image from Markdown conversion'}
+                             loading="lazy"
                            />
                          )
                         }}
