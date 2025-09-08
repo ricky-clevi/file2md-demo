@@ -89,6 +89,12 @@ export async function POST(request: NextRequest) {
     const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const originalName = sanitizedFileName.replace(/\.[^/.]+$/, ''); // Remove extension
     
+    // Determine processing mode early for use in both branches
+    const shouldUseBase64 = process.env.VERCEL || 
+                           process.env.VERCEL_ENV || 
+                           !existsSync(path.join(process.cwd(), 'public')) ||
+                           true; // Force it for now to debug
+    
     // Save uploaded file temporarily
     const tempFilePath = path.join(tempDir, `${fileId}-${sanitizedFileName}`);
     const bytes = await file.arrayBuffer();
@@ -163,7 +169,15 @@ export async function POST(request: NextRequest) {
           // Failed to build public preview images mirror
         }
 
-        if (process.env.VERCEL) {
+        console.log('Environment detection for image processing:', {
+          VERCEL: process.env.VERCEL,
+          VERCEL_ENV: process.env.VERCEL_ENV,
+          publicExists: existsSync(path.join(process.cwd(), 'public')),
+          shouldUseBase64,
+          nodeEnv: process.env.NODE_ENV
+        });
+
+        if (shouldUseBase64) {
           // On Vercel, we'll return the ZIP file as base64 encoded data
           await createZipFile(zipPath, result.markdown, originalName, [...result.images], tempFilePath, imageDir);
           const fs = await import('fs/promises');
@@ -226,7 +240,10 @@ export async function POST(request: NextRequest) {
           }
           
           // Replace image references with base64 data URLs
-          console.log('Replacing image references with base64 data URLs:', Object.keys(imageDataUrls));
+          console.log('=== DEBUG INFO ===');
+          console.log('Original markdown preview (first 500 chars):', previewMarkdown.substring(0, 500));
+          console.log('Available images for replacement:', Object.keys(imageDataUrls));
+          console.log('Sample base64 URL:', Object.values(imageDataUrls)[0]?.substring(0, 50) + '...');
           
           for (const [imageName, dataUrl] of Object.entries(imageDataUrls)) {
             const escapedName = escapeRegExp(imageName);
@@ -257,6 +274,9 @@ export async function POST(request: NextRequest) {
             console.log(`Total replacements for ${imageName}: ${totalReplacements}`);
           }
           
+          console.log('=== AFTER REPLACEMENT ===');
+          console.log('Final markdown preview (first 500 chars):', previewMarkdown.substring(0, 500));
+          console.log('Markdown contains data: URLs?', previewMarkdown.includes('data:image'));
           console.log('Serverless mode: Using base64 encoding for reliable image preview');
         } else {
           // Local development path
@@ -292,7 +312,7 @@ export async function POST(request: NextRequest) {
         // Save markdown file directly, ensure unique filename
         filename = `${originalName}__${fileId}.md`;
         
-        if (process.env.VERCEL) {
+        if (shouldUseBase64) {
           // On Vercel, return markdown content as data URL
           const markdownBase64 = Buffer.from(result.markdown, 'utf-8').toString('base64');
           downloadUrl = `data:text/markdown;base64,${markdownBase64}`;
