@@ -178,11 +178,22 @@ export async function POST(request: NextRequest) {
           // Create dynamic image URLs using our serve-image API
           previewMarkdown = result.markdown;
           
+          console.log('Processing images for serverless preview:', {
+            imageCount: result.images.length,
+            imageDir,
+            sessionId: fileId
+          });
+          
           for (const image of result.images) {
             const savedPath = typeof image.savedPath === 'string' ? image.savedPath : '';
             if (!savedPath) continue;
             
             const imageName = path.basename(savedPath);
+            console.log('Processing image:', {
+              savedPath,
+              imageName,
+              fileExists: existsSync(savedPath)
+            });
             
             // Create dynamic image URL using our serve-image API
             const imageUrl = `/api/serve-image?path=${encodeURIComponent(imageName)}&session=${fileId}`;
@@ -195,13 +206,20 @@ export async function POST(request: NextRequest) {
               new RegExp(`src="\\./images/${escapeRegExp(imageName)}"`, 'g'),
             ];
             
+            let replacements = 0;
             patterns.forEach(pattern => {
+              const before = previewMarkdown.length;
               if (pattern.source.includes('!\\[')) {
                 previewMarkdown = previewMarkdown.replace(pattern, `![$1](${imageUrl})`);
               } else {
                 previewMarkdown = previewMarkdown.replace(pattern, `src="${imageUrl}"`);
               }
+              if (previewMarkdown.length !== before) {
+                replacements++;
+              }
             });
+            
+            console.log(`Made ${replacements} replacements for ${imageName} with URL: ${imageUrl}`);
           }
           
           console.log('Serverless mode: Using dynamic image serving for preview');

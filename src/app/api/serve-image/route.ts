@@ -54,11 +54,56 @@ export async function GET(request: NextRequest) {
     
     // Construct full path within temp directory structure
     const tempDir = process.env.VERCEL ? '/tmp' : path.join(process.cwd(), 'temp');
-    const fullImagePath = path.join(tempDir, `${session}-images`, safePath);
+    let fullImagePath = path.join(tempDir, `${session}-images`, safePath);
+    
+    console.log('Serve image debug:', {
+      session,
+      imagePath,
+      safePath,
+      tempDir,
+      fullImagePath,
+      fileExists: existsSync(fullImagePath)
+    });
     
     // Check if file exists
     if (!existsSync(fullImagePath)) {
-      return new NextResponse('Image not found', { status: 404 });
+      // Try alternative paths that file2md might use
+      const alternativePaths = [
+        path.join(tempDir, `${session}-images`, 'images', safePath), // nested images folder
+        path.join(tempDir, session, 'images', safePath), // different session structure
+        path.join(tempDir, session, safePath), // direct in session folder
+      ];
+      
+      console.log('Trying alternative paths:', alternativePaths);
+      
+      let foundPath = null;
+      for (const altPath of alternativePaths) {
+        if (existsSync(altPath)) {
+          foundPath = altPath;
+          console.log('Found image at alternative path:', altPath);
+          break;
+        }
+      }
+      
+      if (!foundPath) {
+        // List contents of temp directory for debugging
+        try {
+          const fs = await import('fs/promises');
+          const tempContents = await fs.readdir(tempDir);
+          console.log('Temp directory contents:', tempContents);
+          
+          // Try to find session directories
+          const sessionDirs = tempContents.filter(item => item.includes(session.split('-')[0]));
+          console.log('Session-related directories:', sessionDirs);
+        } catch (listError) {
+          console.error('Error listing temp directory:', listError);
+        }
+        
+        return new NextResponse('Image not found', { status: 404 });
+      }
+      
+      // Use the found alternative path
+      fullImagePath = foundPath;
     }
     
     // Read and serve the image
