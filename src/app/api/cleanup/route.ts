@@ -10,8 +10,8 @@ export const runtime = 'nodejs';
 
 export async function POST() {
   try {
-    const downloadsDir = path.join(process.cwd(), 'public', 'downloads');
-    const tempDir = path.join(process.cwd(), 'temp');
+    const downloadsDir = process.env.VERCEL ? '/tmp' : path.join(process.cwd(), 'public', 'downloads');
+    const tempDir = process.env.VERCEL ? '/tmp' : path.join(process.cwd(), 'temp');
     
     let cleaned = 0;
 

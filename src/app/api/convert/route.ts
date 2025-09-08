@@ -61,9 +61,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create temporary directories
-    const tempDir = path.join(process.cwd(), 'temp');
-    const outputDir = path.join(process.cwd(), 'public', 'downloads');
+    // Create temporary directories - use /tmp for serverless compatibility
+    const tempDir = process.env.VERCEL ? '/tmp' : path.join(process.cwd(), 'temp');
+    const outputDir = process.env.VERCEL ? '/tmp' : path.join(process.cwd(), 'public', 'downloads');
     
     
     try {
@@ -150,39 +150,67 @@ export async function POST(request: NextRequest) {
           // Failed to build public preview images mirror
         }
 
-        await createZipFile(zipPath, result.markdown, originalName, [...result.images], tempFilePath, imageDir);
-        downloadUrl = `/downloads/${filename}`;
-        
-        // Rewrite markdown image links for preview to point to public mirror
-        const baseUrl = `/downloads/${fileId}-images/images/`;
-                
-        // Enhanced replacement to handle various image reference formats
-        // Also handle HTML img tags for better compatibility
-        previewMarkdown = result.markdown
-          .replace(/\]\(images\//g, `](${baseUrl}`)
-          .replace(/\]\(\.\/images\//g, `](${baseUrl}`)
-          .replace(/src="images\//g, `src="${baseUrl}`)
-          .replace(/src="\.\/images\//g, `src="${baseUrl}`)
-          .replace(/src='images\//g, `src='${baseUrl}`)
-          .replace(/src='\.\/images\//g, `src='${baseUrl}`);
-        
-        // Additional fix: Ensure all image references use absolute URLs
-        previewMarkdown = previewMarkdown.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
-          if (src.startsWith('images/') || src.startsWith('./images/')) {
-            const cleanSrc = src.replace(/^\.\/images\//, 'images/').replace(/^images\//, '');
-            const fullUrl = `${baseUrl}${cleanSrc}`;
-            return `![${alt}](${fullUrl})`;
-          }
-          return match;
-        });
+        if (process.env.VERCEL) {
+          // On Vercel, we'll return the ZIP file as base64 encoded data
+          await createZipFile(zipPath, result.markdown, originalName, [...result.images], tempFilePath, imageDir);
+          const fs = await import('fs/promises');
+          const zipBuffer = await fs.readFile(zipPath);
+          const base64Zip = zipBuffer.toString('base64');
+          
+          // Clean up the ZIP file from /tmp
+          await fs.unlink(zipPath);
+          
+          downloadUrl = `data:application/zip;base64,${base64Zip}`;
+          
+          // For Vercel, images won't be previewable in markdown, so show placeholder
+          previewMarkdown = result.markdown.replace(
+            /!\[([^\]]*)\]\(([^)]+)\)/g,
+            '![Image preview not available on serverless - download ZIP to view images]'
+          );
+        } else {
+          // Local development path
+          await createZipFile(zipPath, result.markdown, originalName, [...result.images], tempFilePath, imageDir);
+          downloadUrl = `/downloads/${filename}`;
+          
+          // Rewrite markdown image links for preview to point to public mirror
+          const baseUrl = `/downloads/${fileId}-images/images/`;
+                  
+          // Enhanced replacement to handle various image reference formats
+          // Also handle HTML img tags for better compatibility
+          previewMarkdown = result.markdown
+            .replace(/\]\(images\//g, `](${baseUrl}`)
+            .replace(/\]\(\.\/images\//g, `](${baseUrl}`)
+            .replace(/src="images\//g, `src="${baseUrl}`)
+            .replace(/src="\.\/images\//g, `src="${baseUrl}`)
+            .replace(/src='images\//g, `src='${baseUrl}`)
+            .replace(/src='\.\/images\//g, `src='${baseUrl}`);
+          
+          // Additional fix: Ensure all image references use absolute URLs
+          previewMarkdown = previewMarkdown.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
+            if (src.startsWith('images/') || src.startsWith('./images/')) {
+              const cleanSrc = src.replace(/^\.\/images\//, 'images/').replace(/^images\//, '');
+              const fullUrl = `${baseUrl}${cleanSrc}`;
+              return `![${alt}](${fullUrl})`;
+            }
+            return match;
+          });
+        }
         
         
       } else {
         // Save markdown file directly, ensure unique filename
         filename = `${originalName}__${fileId}.md`;
-        const mdPath = path.join(outputDir, filename);
-        await writeFile(mdPath, result.markdown, 'utf-8');
-        downloadUrl = `/downloads/${filename}`;
+        
+        if (process.env.VERCEL) {
+          // On Vercel, return markdown content as data URL
+          const markdownBase64 = Buffer.from(result.markdown, 'utf-8').toString('base64');
+          downloadUrl = `data:text/markdown;base64,${markdownBase64}`;
+        } else {
+          // Local development path
+          const mdPath = path.join(outputDir, filename);
+          await writeFile(mdPath, result.markdown, 'utf-8');
+          downloadUrl = `/downloads/${filename}`;
+        }
         
         // Clean up temporary files for non-image case
         await cleanupTempFiles(tempFilePath, imageDir);
