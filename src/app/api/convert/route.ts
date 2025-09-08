@@ -101,6 +101,14 @@ export async function POST(request: NextRequest) {
       // Convert file using file2md with enhanced options
       const imageDir = path.join(tempDir, `${fileId}-images`);
       
+      console.log('Environment check:', {
+        isVercel: !!process.env.VERCEL,
+        tempDir,
+        imageDir,
+        cwdExists: existsSync(process.cwd()),
+        tempDirExists: existsSync(tempDir)
+      });
+      
       // Setting imageDir
       
       const result = await convert(tempFilePath, {
@@ -167,42 +175,19 @@ export async function POST(request: NextRequest) {
           
           downloadUrl = `data:application/zip;base64,${base64Zip}`;
           
-          // Create base64 data URLs for image preview on serverless
-          const imageDataUrls: Record<string, string> = {};
+          // Create dynamic image URLs using our serve-image API
+          previewMarkdown = result.markdown;
           
           for (const image of result.images) {
             const savedPath = typeof image.savedPath === 'string' ? image.savedPath : '';
             if (!savedPath) continue;
             
-            try {
-              const imageBuffer = await fs.readFile(savedPath);
-              const imageName = path.basename(savedPath);
-              const ext = path.extname(imageName).toLowerCase();
-              
-              // Skip very large images for preview (>2MB) to avoid memory issues
-              if (imageBuffer.length > 2 * 1024 * 1024) {
-                continue;
-              }
-              
-              // Determine MIME type
-              let mimeType = 'image/png';
-              if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
-              else if (ext === '.gif') mimeType = 'image/gif';
-              else if (ext === '.webp') mimeType = 'image/webp';
-              
-              const base64Image = imageBuffer.toString('base64');
-              const dataUrl = `data:${mimeType};base64,${base64Image}`;
-              
-              // Map image filename to data URL
-              imageDataUrls[imageName] = dataUrl;
-            } catch (err) {
-              // Skip failed images
-            }
-          }
-          
-          // Replace image references with base64 data URLs
-          previewMarkdown = result.markdown;
-          for (const [imageName, dataUrl] of Object.entries(imageDataUrls)) {
+            const imageName = path.basename(savedPath);
+            
+            // Create dynamic image URL using our serve-image API
+            const imageUrl = `/api/serve-image?path=${encodeURIComponent(imageName)}&session=${fileId}`;
+            
+            // Replace image references with dynamic URLs
             const patterns = [
               new RegExp(`!\\[([^\\]]*)\\]\\(images/${escapeRegExp(imageName)}\\)`, 'g'),
               new RegExp(`!\\[([^\\]]*)\\]\\(\\./images/${escapeRegExp(imageName)}\\)`, 'g'),
@@ -212,12 +197,14 @@ export async function POST(request: NextRequest) {
             
             patterns.forEach(pattern => {
               if (pattern.source.includes('!\\[')) {
-                previewMarkdown = previewMarkdown.replace(pattern, `![$1](${dataUrl})`);
+                previewMarkdown = previewMarkdown.replace(pattern, `![$1](${imageUrl})`);
               } else {
-                previewMarkdown = previewMarkdown.replace(pattern, `src="${dataUrl}"`);
+                previewMarkdown = previewMarkdown.replace(pattern, `src="${imageUrl}"`);
               }
             });
           }
+          
+          console.log('Serverless mode: Using dynamic image serving for preview');
         } else {
           // Local development path
           await createZipFile(zipPath, result.markdown, originalName, [...result.images], tempFilePath, imageDir);
