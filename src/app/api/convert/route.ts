@@ -277,6 +277,13 @@ export async function POST(request: NextRequest) {
           console.log('=== AFTER REPLACEMENT ===');
           console.log('Final markdown preview (first 500 chars):', previewMarkdown.substring(0, 500));
           console.log('Markdown contains data: URLs?', previewMarkdown.includes('data:image'));
+          // FORCE TEST: Replace ALL image references with a test base64 image
+          const testImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='; // 1x1 red pixel
+          previewMarkdown = previewMarkdown.replace(/!\[([^\]]*)\]\(images\/[^)]+\)/g, `![$1](${testImage})`);
+          previewMarkdown = previewMarkdown.replace(/!\[([^\]]*)\]\(\.\/images\/[^)]+\)/g, `![$1](${testImage})`);
+          
+          console.log('FORCE TEST: Replaced ALL image references with test base64');
+          console.log('Final markdown contains test image?', previewMarkdown.includes(testImage));
           console.log('Serverless mode: Using base64 encoding for reliable image preview');
         } else {
           // Local development path
