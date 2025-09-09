@@ -189,102 +189,66 @@ export async function POST(request: NextRequest) {
           
           downloadUrl = `data:application/zip;base64,${base64Zip}`;
           
-          // Create base64 data URLs for image preview (reliable serverless approach)
+          // Replace image references with informative serverless messages
           previewMarkdown = result.markdown;
-          const imageDataUrls: Record<string, string> = {};
           
-          console.log('Creating base64 image previews:', {
-            imageCount: result.images.length,
-            imageDir
+          console.log('Serverless environment detected - replacing images with informative messages');
+          console.log('Original image count:', result.images.length);
+          
+          // Create informative message blocks to replace images
+          const imageWarningHtml = `
+<div style="
+  border: 2px dashed #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 12px 0;
+  background-color: #f8fafc;
+  text-align: center;
+  color: #475569;
+  font-family: system-ui, -apple-system, sans-serif;
+">
+  <div style="font-size: 24px; margin-bottom: 8px;">🖼️</div>
+  <div style="font-weight: 600; margin-bottom: 4px;">Image Preview Not Available</div>
+  <div style="font-size: 14px; line-height: 1.4;">
+    Images cannot be displayed in the serverless preview.<br>
+    <strong>Download the ZIP file</strong> to view all images and content.
+  </div>
+</div>`;
+
+          // Replace various image reference patterns with the informative message
+          const patterns = [
+            /!\[([^\]]*)\]\(images\/[^)]+\)/gi,
+            /!\[([^\]]*)\]\(\.\/images\/[^)]+\)/gi,
+            /<img[^>]*src="images\/[^"]*"[^>]*>/gi,
+            /<img[^>]*src="\.\/images\/[^"]*"[^>]*>/gi
+          ];
+          
+          let totalReplacements = 0;
+          patterns.forEach(pattern => {
+            const matches = previewMarkdown.match(pattern);
+            if (matches) {
+              previewMarkdown = previewMarkdown.replace(pattern, imageWarningHtml);
+              totalReplacements += matches.length;
+              console.log(`Replaced ${matches.length} image references with serverless message`);
+            }
           });
           
-          for (const image of result.images) {
-            const savedPath = typeof image.savedPath === 'string' ? image.savedPath : '';
-            if (!savedPath) continue;
-            
-            try {
-              const imageBuffer = await fs.readFile(savedPath);
-              const imageName = path.basename(savedPath);
-              const ext = path.extname(imageName).toLowerCase();
-              
-              console.log('Processing image for base64:', {
-                imageName,
-                savedPath,
-                size: imageBuffer.length,
-                exists: existsSync(savedPath)
-              });
-              
-              // Skip very large images to avoid memory issues (3MB limit)
-              if (imageBuffer.length > 3 * 1024 * 1024) {
-                console.log(`Skipping large image ${imageName}: ${imageBuffer.length} bytes`);
-                continue;
-              }
-              
-              // Determine MIME type
-              let mimeType = 'image/png';
-              if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
-              else if (ext === '.gif') mimeType = 'image/gif';
-              else if (ext === '.webp') mimeType = 'image/webp';
-              else if (ext === '.bmp') mimeType = 'image/bmp';
-              
-              const base64Image = imageBuffer.toString('base64');
-              const dataUrl = `data:${mimeType};base64,${base64Image}`;
-              
-              // Map image filename to data URL
-              imageDataUrls[imageName] = dataUrl;
-              console.log(`Created base64 data URL for ${imageName} (${mimeType})`);
-              
-            } catch (err) {
-              console.error(`Failed to process image ${savedPath}:`, err);
-            }
+          console.log(`Total image replacements: ${totalReplacements}`);
+          
+          // Add a helpful notice at the top of the markdown
+          if (result.images.length > 0) {
+            const serverlessNotice = `
+> **📋 Serverless Preview Notice**  
+> This document contains **${result.images.length} image(s)** that cannot be displayed in the web preview due to serverless environment limitations.  
+> **Download the ZIP file** below to access the complete document with all images.
+
+---
+
+`;
+            previewMarkdown = serverlessNotice + previewMarkdown;
           }
           
-          // Replace image references with base64 data URLs
-          console.log('=== DEBUG INFO ===');
-          console.log('Original markdown preview (first 500 chars):', previewMarkdown.substring(0, 500));
-          console.log('Available images for replacement:', Object.keys(imageDataUrls));
-          console.log('Sample base64 URL:', Object.values(imageDataUrls)[0]?.substring(0, 50) + '...');
-          
-          for (const [imageName, dataUrl] of Object.entries(imageDataUrls)) {
-            const escapedName = escapeRegExp(imageName);
-            
-            // Multiple comprehensive patterns
-            const patterns = [
-              // Standard markdown image syntax
-              { regex: new RegExp(`!\\[([^\\]]*)\\]\\(images/${escapedName}\\)`, 'gi'), replacement: `![$1](${dataUrl})` },
-              { regex: new RegExp(`!\\[([^\\]]*)\\]\\(\\./images/${escapedName}\\)`, 'gi'), replacement: `![$1](${dataUrl})` },
-              // HTML img tags
-              { regex: new RegExp(`<img([^>]*) src="images/${escapedName}"([^>]*)>`, 'gi'), replacement: `<img$1 src="${dataUrl}"$2>` },
-              { regex: new RegExp(`<img([^>]*) src="\\./images/${escapedName}"([^>]*)>`, 'gi'), replacement: `<img$1 src="${dataUrl}"$2>` },
-              // Direct path references
-              { regex: new RegExp(`images/${escapedName}`, 'gi'), replacement: dataUrl },
-              { regex: new RegExp(`\\./images/${escapedName}`, 'gi'), replacement: dataUrl }
-            ];
-            
-            let totalReplacements = 0;
-            patterns.forEach(({ regex, replacement }) => {
-              const matches = previewMarkdown.match(regex);
-              if (matches) {
-                previewMarkdown = previewMarkdown.replace(regex, replacement);
-                totalReplacements += matches.length;
-                console.log(`Replaced ${matches.length} occurrences of ${imageName} using pattern: ${regex.source}`);
-              }
-            });
-            
-            console.log(`Total replacements for ${imageName}: ${totalReplacements}`);
-          }
-          
-          console.log('=== AFTER REPLACEMENT ===');
-          console.log('Final markdown preview (first 500 chars):', previewMarkdown.substring(0, 500));
-          console.log('Markdown contains data: URLs?', previewMarkdown.includes('data:image'));
-          // FORCE TEST: Replace ALL image references with a test base64 image
-          const testImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='; // 1x1 red pixel
-          previewMarkdown = previewMarkdown.replace(/!\[([^\]]*)\]\(images\/[^)]+\)/g, `![$1](${testImage})`);
-          previewMarkdown = previewMarkdown.replace(/!\[([^\]]*)\]\(\.\/images\/[^)]+\)/g, `![$1](${testImage})`);
-          
-          console.log('FORCE TEST: Replaced ALL image references with test base64');
-          console.log('Final markdown contains test image?', previewMarkdown.includes(testImage));
-          console.log('Serverless mode: Using base64 encoding for reliable image preview');
+          console.log('Serverless mode: Images replaced with informative messages');
         } else {
           // Local development path
           await createZipFile(zipPath, result.markdown, originalName, [...result.images], tempFilePath, imageDir);
