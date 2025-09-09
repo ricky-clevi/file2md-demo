@@ -195,25 +195,17 @@ export async function POST(request: NextRequest) {
           console.log('Serverless environment detected - replacing images with informative messages');
           console.log('Original image count:', result.images.length);
           
-          // Create informative message blocks to replace images
-          const imageWarningHtml = `
-<div style="
-  border: 2px dashed #e2e8f0;
-  border-radius: 8px;
-  padding: 16px;
-  margin: 12px 0;
-  background-color: #f8fafc;
-  text-align: center;
-  color: #475569;
-  font-family: system-ui, -apple-system, sans-serif;
-">
-  <div style="font-size: 24px; margin-bottom: 8px;">🖼️</div>
-  <div style="font-weight: 600; margin-bottom: 4px;">Image Preview Not Available</div>
-  <div style="font-size: 14px; line-height: 1.4;">
-    Images cannot be displayed in the serverless preview.<br>
-    <strong>Download the ZIP file</strong> to view all images and content.
-  </div>
-</div>`;
+          // Create a simple markdown message to replace images
+          const imageWarningMessage = `
+
+---
+**🖼️ Image Not Available**
+
+*This image cannot be displayed in the serverless preview. Download the ZIP file to view all images.*
+
+---
+
+`;
 
           // Replace various image reference patterns with the informative message
           // More comprehensive patterns to catch all image references
@@ -232,7 +224,7 @@ export async function POST(request: NextRequest) {
           patterns.forEach((pattern, index) => {
             const matches = previewMarkdown.match(pattern);
             if (matches) {
-              previewMarkdown = previewMarkdown.replace(pattern, imageWarningHtml);
+              previewMarkdown = previewMarkdown.replace(pattern, imageWarningMessage);
               totalReplacements += matches.length;
               console.log(`Pattern ${index + 1}: Replaced ${matches.length} image references`);
             }
@@ -247,12 +239,15 @@ export async function POST(request: NextRequest) {
             .replace(/^[^\n]*(?:png|jpg|jpeg|gif|bmp|webp|svg)[^\n]*$/gim, '')
             // Remove standalone image filenames that might remain
             .replace(/^[^\n]*\.(png|jpg|jpeg|gif|bmp|webp|svg)[^\n]*$/gim, '')
+            // Remove any Korean text that commonly appears with images
+            .replace(/묶음\s*개체입니다\.?\s*/gi, '')
+            .replace(/인포그래픽\s*/gi, '')
+            // Remove the specific Korean text fragments you mentioned
+            .replace(/GTX-A\s*개통\s*1주년\s*/gi, '')
             // Clean up multiple consecutive newlines
             .replace(/\n{3,}/g, '\n\n')
-            // Remove any Korean text that commonly appears with images (묶음 개체입니다 means "grouped object")
-            .replace(/묶음\s*개체입니다\.?/gi, '')
-            // Clean up any remaining image-related Korean text
-            .replace(/인포그래픽\s*/gi, '')
+            // Remove any remaining standalone Korean characters or fragments
+            .replace(/^[가-힣\s]+$/gm, '')
             .trim();
           
           // Add a helpful notice at the top of the markdown
