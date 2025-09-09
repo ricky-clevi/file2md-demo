@@ -128,11 +128,37 @@ export default function Home() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            File to Markdown Converter
+            File2MD Demo Application
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-600 mb-4">
+            Interactive demo for the <a href="https://www.npmjs.com/package/file2md" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 font-semibold">file2md</a> npm package
+          </p>
+          <p className="text-sm text-gray-500">
             Convert PDF, DOCX, XLSX, PPTX, HWP, and HWPX files to Markdown format
           </p>
+        </div>
+
+        {/* Serverless Notice */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-blue-800">
+                Demo Environment Notice
+              </h3>
+              <div className="mt-2 text-sm text-blue-700">
+                <p>
+                  This demo runs in a serverless environment. Image previews are not available in the web interface, 
+                  but all images are included in the downloadable ZIP file. For full image preview capabilities, 
+                  run file2md locally or in a traditional server environment.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
@@ -265,8 +291,12 @@ export default function Home() {
                   Conversion Successful!
                 </h2>
                 <p className="text-gray-600">
-                  Your file has been converted to Markdown format
-                  {result.hasImages && ' with extracted images'}.
+                  Your file has been converted to Markdown format{result.hasImages && ' with extracted images'}.
+                  {result.hasImages && (
+                    <span className="block mt-2 text-sm text-amber-600">
+                      📋 Images are included in the ZIP download but not visible in this serverless preview.
+                    </span>
+                  )}
                 </p>
               </div>
 
@@ -378,24 +408,58 @@ export default function Home() {
           )}
         </div>
 
-        {/* Supported Formats Info */}
-        <div className="mt-8 bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Supported Formats</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {[
-              { name: 'PDF', desc: 'Portable Document Format', icon: '📄' },
-              { name: 'DOCX', desc: 'Microsoft Word Document', icon: '📝' },
-              { name: 'XLSX', desc: 'Microsoft Excel Spreadsheet', icon: '📊' },
-              { name: 'PPTX', desc: 'Microsoft PowerPoint Presentation', icon: '📽️' },
-              { name: 'HWP', desc: 'Hangul Word Processor', icon: '🇰🇷' },
-              { name: 'HWPX', desc: 'Hangul Word Processor XML', icon: '📋' }
-            ].map(format => (
-              <div key={format.name} className="text-center p-3 border rounded-lg">
-                <div className="text-2xl mb-2">{format.icon}</div>
-                <div className="font-medium text-gray-900">{format.name}</div>
-                <div className="text-xs text-gray-500">{format.desc}</div>
+        {/* Package Info & Supported Formats */}
+        <div className="mt-8 space-y-6">
+          {/* About file2md */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">About file2md Package</h3>
+            <div className="prose prose-sm max-w-none text-gray-600">
+              <p>
+                The <strong>file2md</strong> npm package converts various document formats into clean, structured Markdown. 
+                It extracts text, images, charts, and maintains document layout while providing developer-friendly options.
+              </p>
+              <div className="grid md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <h4 className="font-semibold text-gray-900">Key Features:</h4>
+                  <ul className="text-sm space-y-1">
+                    <li>✅ Text extraction with formatting</li>
+                    <li>✅ Image and chart extraction</li>
+                    <li>✅ Layout preservation options</li>
+                    <li>✅ Multiple output formats</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900">Installation:</h4>
+                  <code className="text-sm bg-gray-100 px-2 py-1 rounded">npm install file2md</code>
+                  <p className="text-sm mt-2">
+                    <a href="https://www.npmjs.com/package/file2md" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                      View on npm →
+                    </a>
+                  </p>
+                </div>
               </div>
-            ))}
+            </div>
+          </div>
+
+          {/* Supported Formats */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Supported Formats</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {[
+                { name: 'PDF', desc: 'Portable Document Format', icon: '📄' },
+                { name: 'DOCX', desc: 'Microsoft Word Document', icon: '📝' },
+                { name: 'XLSX', desc: 'Microsoft Excel Spreadsheet', icon: '📊' },
+                { name: 'PPTX', desc: 'Microsoft PowerPoint Presentation', icon: '📽️' },
+                { name: 'HWP', desc: 'Hangul Word Processor', icon: '🇰🇷' },
+                { name: 'HWPX', desc: 'Hangul Word Processor XML', icon: '📋' }
+              ].map(format => (
+                <div key={format.name} className="text-center p-3 border rounded-lg hover:border-blue-300 transition-colors">
+                  <div className="text-2xl mb-2">{format.icon}</div>
+                  <div className="font-medium text-gray-900">{format.name}</div>
+                  <div className="text-xs text-gray-500">{format.desc}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
