@@ -50,10 +50,10 @@ export default function Home() {
       'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
       'application/x-hwp': ['.hwp'],
       'application/x-hwpx': ['.hwpx'],
-      'application/x-cfb': ['.hwp'] // CFB files with .hwp extension
+      'application/x-cfb': ['.hwp']
     },
     multiple: false,
-    maxSize: 50 * 1024 * 1024 // 50MB limit
+    maxSize: 50 * 1024 * 1024
   });
 
   const handleConvert = async () => {
@@ -76,7 +76,6 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        // Try to surface server-provided error
         let serverMsg = response.statusText || 'Request failed';
         try {
           const maybeJson = await response.json();
@@ -124,86 +123,175 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            File2MD Demo Application
+    <div className="min-h-screen" style={{ background: 'var(--apple-background-secondary)' }}>
+      <div className="max-w-5xl mx-auto px-6 py-16 md:py-24">
+        {/* Header */}
+        <div className="text-center mb-16 animate-slide-in">
+          <h1
+            className="text-5xl md:text-6xl font-semibold mb-4"
+            style={{
+              color: 'var(--apple-foreground)',
+              letterSpacing: '-0.02em',
+              lineHeight: '1.05'
+            }}
+          >
+            File2MD
           </h1>
-          <p className="text-lg text-gray-600 mb-4">
-            Interactive demo for the <a href="https://www.npmjs.com/package/file2md" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 font-semibold">file2md</a> npm package
+          <p
+            className="text-xl md:text-2xl mb-3"
+            style={{
+              color: 'var(--apple-foreground-secondary)',
+              fontWeight: '400',
+              letterSpacing: '-0.01em'
+            }}
+          >
+            Convert documents to Markdown
           </p>
-          <p className="text-sm text-gray-500">
-            Convert PDF, DOCX, XLSX, PPTX, HWP, and HWPX files to Markdown format
+          <p
+            className="text-base"
+            style={{ color: 'var(--apple-foreground-secondary)' }}
+          >
+            Powered by{' '}
+            <a
+              href="https://www.npmjs.com/package/file2md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium transition-opacity hover:opacity-70"
+              style={{ color: 'var(--apple-blue)' }}
+            >
+              file2md
+            </a>
+            {' '}npm package
           </p>
         </div>
 
-        {/* Serverless Notice */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+        {/* Demo Environment Notice */}
+        <div
+          className="mb-8 p-5 rounded-2xl animate-slide-in"
+          style={{
+            background: 'var(--apple-background)',
+            border: '1px solid var(--apple-separator)',
+            boxShadow: 'var(--apple-shadow-sm)'
+          }}
+        >
+          <div className="flex items-start gap-4">
+            <div
+              className="flex-shrink-0 w-6 h-6 mt-0.5"
+              style={{ color: 'var(--apple-blue)' }}
+            >
+              <svg fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
             </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800">
-                Demo Environment Notice
+            <div className="flex-1">
+              <h3
+                className="text-base font-semibold mb-2"
+                style={{ color: 'var(--apple-foreground)' }}
+              >
+                Demo Environment
               </h3>
-              <div className="mt-2 text-sm text-blue-700">
-                <p>
-                  This demo runs in a serverless environment. Image previews are not available in the web interface, 
-                  but all images are included in the downloadable ZIP file. For full image preview capabilities, 
-                  run file2md locally or in a traditional server environment.
-                </p>
-              </div>
+              <p
+                className="text-sm leading-relaxed"
+                style={{ color: 'var(--apple-foreground-secondary)' }}
+              >
+                This demo runs in a serverless environment. Image previews are not available in the web interface,
+                but all images are included in the downloadable ZIP file. For full image preview capabilities,
+                run file2md locally or in a traditional server environment.
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+        {/* Main Card */}
+        <div
+          className="p-8 md:p-12 rounded-3xl mb-12 animate-slide-in"
+          style={{
+            background: 'var(--apple-background)',
+            border: '1px solid var(--apple-separator)',
+            boxShadow: 'var(--apple-shadow-md)'
+          }}
+        >
           {!result ? (
             <>
               {/* File Upload Area */}
               <div
                 {...getRootProps()}
-                className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${
-                  isDragActive
-                    ? 'border-blue-500 bg-blue-50 scale-[1.01]'
-                    : selectedFile
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-gray-300 hover:border-gray-400 hover:shadow-md'
+                className={`border-2 border-dashed rounded-2xl p-12 md:p-16 text-center cursor-pointer transition-all duration-200 ${
+                  isDragActive ? 'scale-[1.02]' : selectedFile ? '' : 'hover:scale-[1.01]'
                 }`}
+                style={{
+                  borderColor: isDragActive
+                    ? 'var(--apple-blue)'
+                    : selectedFile
+                    ? 'var(--apple-green)'
+                    : 'var(--apple-separator)',
+                  background: isDragActive
+                    ? 'rgba(0, 122, 255, 0.05)'
+                    : selectedFile
+                    ? 'rgba(52, 199, 89, 0.05)'
+                    : 'transparent'
+                }}
               >
                 <input {...getInputProps()} />
-                <div className="space-y-4">
-                  <div className="mx-auto w-16 h-16 text-gray-400">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                      />
-                    </svg>
+                <div className="space-y-6">
+                  <div
+                    className="mx-auto w-20 h-20"
+                    style={{
+                      color: selectedFile
+                        ? 'var(--apple-green)'
+                        : 'var(--apple-foreground-secondary)'
+                    }}
+                  >
+                    {selectedFile ? (
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    ) : (
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                      </svg>
+                    )}
                   </div>
                   {selectedFile ? (
-                    <div>
-                      <p className="text-green-600 font-medium">File selected:</p>
-                      <p className="text-sm text-gray-500">{selectedFile.name}</p>
-                      <p className="text-xs text-gray-400">
+                    <div className="space-y-2">
+                      <p
+                        className="text-lg font-medium"
+                        style={{ color: 'var(--apple-green)' }}
+                      >
+                        File selected
+                      </p>
+                      <p
+                        className="text-base font-medium"
+                        style={{ color: 'var(--apple-foreground)' }}
+                      >
+                        {selectedFile.name}
+                      </p>
+                      <p
+                        className="text-sm"
+                        style={{ color: 'var(--apple-foreground-secondary)' }}
+                      >
                         {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                       </p>
                     </div>
                   ) : (
-                    <div>
-                      <p className="text-lg text-gray-600">
-                        {isDragActive
-                          ? 'Drop the file here...'
-                          : 'Drag & drop a file here, or click to select'}
+                    <div className="space-y-3">
+                      <p
+                        className="text-xl font-medium"
+                        style={{ color: 'var(--apple-foreground)' }}
+                      >
+                        {isDragActive ? 'Drop your file here' : 'Drag and drop a file'}
                       </p>
-                      <p className="text-sm text-gray-400 mt-2">
-                        Supports PDF, DOCX, XLSX, PPTX, HWP, HWPX (max 50MB)
+                      <p
+                        className="text-base"
+                        style={{ color: 'var(--apple-foreground-secondary)' }}
+                      >
+                        or click to browse
+                      </p>
+                      <p
+                        className="text-sm"
+                        style={{ color: 'var(--apple-gray)' }}
+                      >
+                        PDF, DOCX, XLSX, PPTX, HWP, HWPX · Max 50MB
                       </p>
                     </div>
                   )}
@@ -211,19 +299,41 @@ export default function Home() {
               </div>
 
               {/* Options */}
-              <div className="grid sm:grid-cols-3 gap-4 mt-6">
-                <label className="flex items-center gap-2 text-sm text-gray-700 border rounded-md p-3">
-                  <input type="checkbox" checked={extractImages} onChange={e => setExtractImages(e.target.checked)} />
-                  Extract images
+              <div className="mt-8">
+                <label
+                  className="inline-flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-colors"
+                  style={{
+                    background: extractImages ? 'var(--apple-background-secondary)' : 'transparent',
+                    border: '1px solid var(--apple-separator)'
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={extractImages}
+                    onChange={e => setExtractImages(e.target.checked)}
+                    className="w-5 h-5 rounded accent-blue-500"
+                    style={{ accentColor: 'var(--apple-blue)' }}
+                  />
+                  <span
+                    className="text-base font-medium"
+                    style={{ color: 'var(--apple-foreground)' }}
+                  >
+                    Extract images
+                  </span>
                 </label>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex justify-center space-x-4 mt-6">
+              <div className="flex flex-col sm:flex-row justify-center gap-4 mt-10">
                 {selectedFile && (
                   <button
                     onClick={resetForm}
-                    className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="apple-button px-8 py-3.5 rounded-full text-base font-medium transition-all"
+                    style={{
+                      background: 'var(--apple-background-secondary)',
+                      color: 'var(--apple-foreground)',
+                      border: '1px solid var(--apple-separator)'
+                    }}
                   >
                     Clear
                   </button>
@@ -231,15 +341,16 @@ export default function Home() {
                 <button
                   onClick={handleConvert}
                   disabled={!selectedFile || isConverting}
-                  className={`px-8 py-2 rounded-md font-medium transition-colors shadow ${
-                    !selectedFile || isConverting
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
+                  className="apple-button px-10 py-3.5 rounded-full text-base font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    background: !selectedFile || isConverting ? 'var(--apple-gray-light)' : 'var(--apple-blue)',
+                    color: !selectedFile || isConverting ? 'var(--apple-gray)' : '#FFFFFF',
+                    boxShadow: !selectedFile || isConverting ? 'none' : 'var(--apple-shadow)'
+                  }}
                 >
                   {isConverting ? (
-                    <span className="flex items-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <span className="flex items-center gap-3">
+                      <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
@@ -253,20 +364,35 @@ export default function Home() {
 
               {/* Error Display */}
               {error && (
-                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <div
+                  className="mt-8 p-5 rounded-2xl"
+                  style={{
+                    background: 'rgba(255, 59, 48, 0.1)',
+                    border: '1px solid rgba(255, 59, 48, 0.2)'
+                  }}
+                >
+                  <div className="flex gap-4">
+                    <div
+                      className="flex-shrink-0 w-6 h-6"
+                      style={{ color: 'var(--apple-red)' }}
+                    >
+                      <svg viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                       </svg>
                     </div>
-                    <div className="ml-3">
-                      <h3 className="text-sm font-medium text-red-800">
+                    <div className="flex-1">
+                      <h3
+                        className="text-base font-semibold mb-1"
+                        style={{ color: 'var(--apple-red)' }}
+                      >
                         Conversion Error
                       </h3>
-                      <div className="mt-2 text-sm text-red-700">
-                        <p>{error}</p>
-                      </div>
+                      <p
+                        className="text-sm"
+                        style={{ color: 'var(--apple-foreground-secondary)' }}
+                      >
+                        {error}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -274,132 +400,248 @@ export default function Home() {
             </>
           ) : (
             /* Success Result */
-            <div className="space-y-6">
-              <div className="mx-auto w-16 h-16 text-green-500">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+            <div className="space-y-8">
+              <div
+                className="mx-auto w-20 h-20"
+                style={{ color: 'var(--apple-green)' }}
+              >
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Conversion Successful!
+
+              <div className="text-center">
+                <h2
+                  className="text-3xl font-semibold mb-3"
+                  style={{ color: 'var(--apple-foreground)' }}
+                >
+                  Conversion Successful
                 </h2>
-                <p className="text-gray-600">
-                  Your file has been converted to Markdown format{result.hasImages && ' with extracted images'}.
-                  {result.hasImages && (
-                    <span className="block mt-2 text-sm text-amber-600">
-                      📋 Images are included in the ZIP download but not visible in this serverless preview.
-                    </span>
-                  )}
+                <p
+                  className="text-lg"
+                  style={{ color: 'var(--apple-foreground-secondary)' }}
+                >
+                  Your file has been converted to Markdown{result.hasImages && ' with extracted images'}.
                 </p>
+                {result.hasImages && (
+                  <p
+                    className="mt-3 text-sm"
+                    style={{ color: 'var(--apple-orange)' }}
+                  >
+                    Images are included in the ZIP download but not visible in this serverless preview.
+                  </p>
+                )}
               </div>
 
-              <div className="space-y-6">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-3">File Conversion Details</h3>
-                  <div className="text-sm text-gray-600 space-y-1">
-                    <p><strong>File:</strong> {result.filename}</p>
-                    <p><strong>Output:</strong> {result.hasImages ? 'ZIP (Markdown + Images)' : 'Markdown'}</p>
-                    <p><strong>Images:</strong> {result.imageCount ?? (result.hasImages ? 'yes' : 'no')}</p>
-                    <p><strong>Charts:</strong> {result.chartCount ?? 0}</p>
-                    {result.stats && (
-                      <>
-                        <p><strong>Input size:</strong> {prettyBytes(result.stats.inputBytes)}</p>
-                        <p><strong>Markdown size:</strong> {prettyBytes(result.stats.markdownBytes)}</p>
-                        <p><strong>Compression ratio:</strong> {result.stats.compressionRatio ?? '-'}</p>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-gray-900">Markdown Preview</h3>
-                    <button
-                      onClick={handleDownload}
-                      className="px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+              {/* File Details */}
+              <div
+                className="p-6 rounded-2xl"
+                style={{
+                  background: 'var(--apple-background-secondary)',
+                  border: '1px solid var(--apple-separator)'
+                }}
+              >
+                <h3
+                  className="text-lg font-semibold mb-4"
+                  style={{ color: 'var(--apple-foreground)' }}
+                >
+                  File Details
+                </h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p style={{ color: 'var(--apple-foreground-secondary)' }}>File</p>
+                    <p
+                      className="font-medium mt-1"
+                      style={{ color: 'var(--apple-foreground)' }}
                     >
-                      Download {result.hasImages ? 'ZIP' : 'Markdown'}
-                    </button>
+                      {result.filename}
+                    </p>
                   </div>
-                  <div className="prose max-w-none text-left bg-white rounded-md p-4 border max-h-[60vh] overflow-auto prose-gray prose-headings:text-gray-900 prose-p:text-gray-800 prose-strong:text-gray-900 prose-li:text-gray-800 prose-blockquote:text-gray-700">
-                    <ErrorBoundary
-                      fallback={
-                        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                          <div className="flex items-center">
-                            <svg className="w-5 h-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                            <p className="text-sm text-yellow-800">
+                  <div>
+                    <p style={{ color: 'var(--apple-foreground-secondary)' }}>Output</p>
+                    <p
+                      className="font-medium mt-1"
+                      style={{ color: 'var(--apple-foreground)' }}
+                    >
+                      {result.hasImages ? 'ZIP (Markdown + Images)' : 'Markdown'}
+                    </p>
+                  </div>
+                  <div>
+                    <p style={{ color: 'var(--apple-foreground-secondary)' }}>Images</p>
+                    <p
+                      className="font-medium mt-1"
+                      style={{ color: 'var(--apple-foreground)' }}
+                    >
+                      {result.imageCount ?? (result.hasImages ? 'yes' : 'no')}
+                    </p>
+                  </div>
+                  <div>
+                    <p style={{ color: 'var(--apple-foreground-secondary)' }}>Charts</p>
+                    <p
+                      className="font-medium mt-1"
+                      style={{ color: 'var(--apple-foreground)' }}
+                    >
+                      {result.chartCount ?? 0}
+                    </p>
+                  </div>
+                  {result.stats && (
+                    <>
+                      <div>
+                        <p style={{ color: 'var(--apple-foreground-secondary)' }}>Input size</p>
+                        <p
+                          className="font-medium mt-1"
+                          style={{ color: 'var(--apple-foreground)' }}
+                        >
+                          {prettyBytes(result.stats.inputBytes)}
+                        </p>
+                      </div>
+                      <div>
+                        <p style={{ color: 'var(--apple-foreground-secondary)' }}>Markdown size</p>
+                        <p
+                          className="font-medium mt-1"
+                          style={{ color: 'var(--apple-foreground)' }}
+                        >
+                          {prettyBytes(result.stats.markdownBytes)}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Markdown Preview */}
+              <div
+                className="p-6 rounded-2xl"
+                style={{
+                  background: 'var(--apple-background-secondary)',
+                  border: '1px solid var(--apple-separator)'
+                }}
+              >
+                <div className="flex items-center justify-between mb-5">
+                  <h3
+                    className="text-lg font-semibold"
+                    style={{ color: 'var(--apple-foreground)' }}
+                  >
+                    Markdown Preview
+                  </h3>
+                  <button
+                    onClick={handleDownload}
+                    className="apple-button px-5 py-2 rounded-full text-sm font-medium"
+                    style={{
+                      background: 'var(--apple-green)',
+                      color: '#FFFFFF',
+                      boxShadow: 'var(--apple-shadow-sm)'
+                    }}
+                  >
+                    Download {result.hasImages ? 'ZIP' : 'Markdown'}
+                  </button>
+                </div>
+                <div
+                  className="prose max-w-none text-left p-6 rounded-xl max-h-[500px] overflow-auto"
+                  style={{
+                    background: 'var(--apple-background)',
+                    border: '1px solid var(--apple-separator)'
+                  }}
+                >
+                  <ErrorBoundary
+                    fallback={
+                      <div
+                        className="p-5 rounded-xl"
+                        style={{
+                          background: 'rgba(255, 149, 0, 0.1)',
+                          border: '1px solid rgba(255, 149, 0, 0.2)'
+                        }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <svg
+                            className="w-5 h-5 flex-shrink-0 mt-0.5"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                            style={{ color: 'var(--apple-orange)' }}
+                          >
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          <div className="flex-1">
+                            <p
+                              className="text-sm font-medium mb-3"
+                              style={{ color: 'var(--apple-foreground)' }}
+                            >
                               Error rendering markdown preview. The file was converted successfully, but some content cannot be displayed.
                             </p>
-                          </div>
-                          <div className="mt-2">
                             <button
                               onClick={handleDownload}
-                              className="text-sm bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700"
+                              className="apple-button text-sm px-4 py-2 rounded-lg font-medium"
+                              style={{
+                                background: 'var(--apple-orange)',
+                                color: '#FFFFFF'
+                              }}
                             >
                               Download Markdown File
                             </button>
                           </div>
                         </div>
-                      }
+                      </div>
+                    }
+                  >
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                       img: ({...props }) => (
+                         // eslint-disable-next-line @next/next/no-img-element
+                         <img
+                           src={props.src as string}
+                           style={{
+                             maxWidth: '100%',
+                             height: 'auto',
+                             marginBottom: '1rem',
+                             border: '1px solid var(--apple-separator)',
+                             borderRadius: 'var(--apple-radius-sm)',
+                             background: 'var(--apple-background-secondary)'
+                           }}
+                           onLoad={(e) => {
+                             (e.target as HTMLImageElement).style.background = 'transparent';
+                           }}
+                           onError={(e) => {
+                             const img = e.target as HTMLImageElement;
+                             img.style.display = 'none';
+                             const fallback = document.createElement('div');
+                             fallback.textContent = `[Image: ${props.alt || 'Unable to load image'}]`;
+                             fallback.style.cssText = 'color: var(--apple-foreground-secondary); font-style: italic; padding: 12px; border: 1px dashed var(--apple-separator); border-radius: 8px; margin-bottom: 1rem;';
+                             img.parentNode?.insertBefore(fallback, img.nextSibling);
+                           }}
+                           alt={props.alt || 'Image from Markdown conversion'}
+                           loading="lazy"
+                         />
+                       )
+                      }}
                     >
-                      <ReactMarkdown 
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                         img: ({...props }) => (
-                           // eslint-disable-next-line @next/next/no-img-element
-                           <img
-                             src={props.src as string}
-                             style={{ 
-                               maxWidth: '100%', 
-                               height: 'auto', 
-                               marginBottom: '1rem',
-                               border: '1px solid #e5e7eb',
-                               borderRadius: '4px',
-                               backgroundColor: '#f9fafb'
-                             }}
-                             onLoad={(e) => {
-                               (e.target as HTMLImageElement).style.backgroundColor = 'transparent';
-                             }}
-                             onError={(e) => {
-                               const img = e.target as HTMLImageElement;
-                               img.style.display = 'none';
-                               // Add fallback text
-                               const fallback = document.createElement('div');
-                               fallback.textContent = `[Image: ${props.alt || 'Unable to load image'}]`;
-                               fallback.style.cssText = 'color: #6b7280; font-style: italic; padding: 8px; border: 1px dashed #d1d5db; border-radius: 4px; margin-bottom: 1rem;';
-                               img.parentNode?.insertBefore(fallback, img.nextSibling);
-                             }}
-                             alt={props.alt || 'Image from Markdown conversion'}
-                             loading="lazy"
-                           />
-                         )
-                        }}
-                      >
-                        {result.markdown || ''}
-                      </ReactMarkdown>
-                    </ErrorBoundary>
-                  </div>
+                      {result.markdown || ''}
+                    </ReactMarkdown>
+                  </ErrorBoundary>
                 </div>
               </div>
 
-              <div className="flex justify-center space-x-4">
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <button
                   onClick={resetForm}
-                  className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="apple-button px-8 py-3.5 rounded-full text-base font-medium"
+                  style={{
+                    background: 'var(--apple-background-secondary)',
+                    color: 'var(--apple-foreground)',
+                    border: '1px solid var(--apple-separator)'
+                  }}
                 >
                   Convert Another File
                 </button>
                 <button
                   onClick={handleDownload}
-                  className="px-8 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium"
+                  className="apple-button px-10 py-3.5 rounded-full text-base font-semibold"
+                  style={{
+                    background: 'var(--apple-green)',
+                    color: '#FFFFFF',
+                    boxShadow: 'var(--apple-shadow)'
+                  }}
                 >
                   Download {result.hasImages ? 'ZIP' : 'Markdown'}
                 </button>
@@ -408,59 +650,171 @@ export default function Home() {
           )}
         </div>
 
-        {/* Package Info & Supported Formats */}
-        <div className="mt-8 space-y-6">
+        {/* Package Info & Features Grid */}
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
           {/* About file2md */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">About file2md Package</h3>
-            <div className="prose prose-sm max-w-none text-gray-600">
-              <p>
-                The <strong>file2md</strong> npm package converts various document formats into clean, structured Markdown. 
-                It extracts text, images, charts, and maintains document layout while providing developer-friendly options.
+          <div
+            className="p-8 rounded-3xl animate-slide-in"
+            style={{
+              background: 'var(--apple-background)',
+              border: '1px solid var(--apple-separator)',
+              boxShadow: 'var(--apple-shadow)'
+            }}
+          >
+            <h3
+              className="text-2xl font-semibold mb-4"
+              style={{
+                color: 'var(--apple-foreground)',
+                letterSpacing: '-0.01em'
+              }}
+            >
+              About file2md
+            </h3>
+            <p
+              className="text-base leading-relaxed mb-6"
+              style={{ color: 'var(--apple-foreground-secondary)' }}
+            >
+              A powerful npm package that converts various document formats into clean, structured Markdown with image extraction and layout preservation.
+            </p>
+
+            <div className="space-y-3 mb-6">
+              {[
+                'Text extraction with formatting',
+                'Image and chart extraction',
+                'Layout preservation options',
+                'Multiple output formats'
+              ].map((feature, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div
+                    className="w-6 h-6 flex-shrink-0 rounded-full flex items-center justify-center"
+                    style={{ background: 'rgba(52, 199, 89, 0.15)' }}
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2.5}
+                      style={{ color: 'var(--apple-green)' }}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span
+                    className="text-base"
+                    style={{ color: 'var(--apple-foreground)' }}
+                  >
+                    {feature}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div
+              className="p-4 rounded-xl"
+              style={{ background: 'var(--apple-background-secondary)' }}
+            >
+              <p
+                className="text-sm mb-2"
+                style={{ color: 'var(--apple-foreground-secondary)' }}
+              >
+                Installation
               </p>
-              <div className="grid md:grid-cols-2 gap-4 mt-4">
-                <div>
-                  <h4 className="font-semibold text-gray-900">Key Features:</h4>
-                  <ul className="text-sm space-y-1">
-                    <li>✅ Text extraction with formatting</li>
-                    <li>✅ Image and chart extraction</li>
-                    <li>✅ Layout preservation options</li>
-                    <li>✅ Multiple output formats</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">Installation:</h4>
-                  <code className="text-sm bg-gray-100 px-2 py-1 rounded">npm install file2md</code>
-                  <p className="text-sm mt-2">
-                    <a href="https://www.npmjs.com/package/file2md" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
-                      View on npm →
-                    </a>
-                  </p>
-                </div>
-              </div>
+              <code
+                className="text-sm font-mono"
+                style={{ color: 'var(--apple-foreground)' }}
+              >
+                npm install file2md
+              </code>
+            </div>
+
+            <div className="mt-6">
+              <a
+                href="https://www.npmjs.com/package/file2md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-base font-medium transition-opacity hover:opacity-70"
+                style={{ color: 'var(--apple-blue)' }}
+              >
+                View on npm
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </a>
             </div>
           </div>
 
           {/* Supported Formats */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Supported Formats</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div
+            className="p-8 rounded-3xl animate-slide-in"
+            style={{
+              background: 'var(--apple-background)',
+              border: '1px solid var(--apple-separator)',
+              boxShadow: 'var(--apple-shadow)'
+            }}
+          >
+            <h3
+              className="text-2xl font-semibold mb-6"
+              style={{
+                color: 'var(--apple-foreground)',
+                letterSpacing: '-0.01em'
+              }}
+            >
+              Supported Formats
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
               {[
-                { name: 'PDF', desc: 'Portable Document Format', icon: '📄' },
-                { name: 'DOCX', desc: 'Microsoft Word Document', icon: '📝' },
-                { name: 'XLSX', desc: 'Microsoft Excel Spreadsheet', icon: '📊' },
-                { name: 'PPTX', desc: 'Microsoft PowerPoint Presentation', icon: '📽️' },
-                { name: 'HWP', desc: 'Hangul Word Processor', icon: '🇰🇷' },
-                { name: 'HWPX', desc: 'Hangul Word Processor XML', icon: '📋' }
+                { name: 'PDF', desc: 'Portable Document', icon: '📄' },
+                { name: 'DOCX', desc: 'Word Document', icon: '📝' },
+                { name: 'XLSX', desc: 'Excel Spreadsheet', icon: '📊' },
+                { name: 'PPTX', desc: 'PowerPoint', icon: '📽️' },
+                { name: 'HWP', desc: 'Hangul Document', icon: '🇰🇷' },
+                { name: 'HWPX', desc: 'Hangul XML', icon: '📋' }
               ].map(format => (
-                <div key={format.name} className="text-center p-3 border rounded-lg hover:border-blue-300 transition-colors">
-                  <div className="text-2xl mb-2">{format.icon}</div>
-                  <div className="font-medium text-gray-900">{format.name}</div>
-                  <div className="text-xs text-gray-500">{format.desc}</div>
+                <div
+                  key={format.name}
+                  className="p-5 rounded-2xl text-center transition-all hover:scale-105"
+                  style={{
+                    background: 'var(--apple-background-secondary)',
+                    border: '1px solid var(--apple-separator)'
+                  }}
+                >
+                  <div className="text-3xl mb-3">{format.icon}</div>
+                  <div
+                    className="font-semibold text-base mb-1"
+                    style={{ color: 'var(--apple-foreground)' }}
+                  >
+                    {format.name}
+                  </div>
+                  <div
+                    className="text-xs"
+                    style={{ color: 'var(--apple-foreground-secondary)' }}
+                  >
+                    {format.desc}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Footer */}
+        <div
+          className="text-center py-8"
+          style={{ color: 'var(--apple-foreground-secondary)' }}
+        >
+          <p className="text-sm">
+            Built with{' '}
+            <a
+              href="https://www.npmjs.com/package/file2md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium transition-opacity hover:opacity-70"
+              style={{ color: 'var(--apple-blue)' }}
+            >
+              file2md
+            </a>
+          </p>
         </div>
       </div>
     </div>
