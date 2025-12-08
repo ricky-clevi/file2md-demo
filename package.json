@@ -17,7 +17,7 @@
     "archiver": "^7.0.1",
     "file2md": "^1.4.52",
     "multer": "^2.0.2",
-    "next": "15.4.4",
+    "next": "15.4.8",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-dropzone": "^14.3.8",
@@ -32,7 +32,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.4.4",
+    "eslint-config-next": "15.4.8",
     "patch-package": "^8.0.0",
     "tailwindcss": "^4",
     "typescript": "^5"
